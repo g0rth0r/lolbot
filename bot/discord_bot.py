@@ -3,6 +3,7 @@ import discord
 import asyncio
 from datetime import datetime
 import statistics
+from ai_commands import handle_mention
 
 class BotCommand:
     def __init__(self, name, description, execute_func):
@@ -26,6 +27,14 @@ class DiscordBot:
         @self.client.event
         async def on_message(message):
             if message.author == self.client.user:
+                return
+
+            # Check if the bot is mentioned
+            if self.client.user.mentioned_in(message) and message.mentions:
+                # Remove the mention of the bot to get the rest of the message
+                mention_text = message.content.replace(f'<@!{self.client.user.id}>', '').strip()
+                # Call the placeholder function or any specific function you've defined
+                await handle_mention(self, message, mention_text)
                 return
 
             command_name = message.content.split(' ')[0]
