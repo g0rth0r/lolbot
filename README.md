@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # lolbot
 
 lolbot is a Discord bot built with Python designed to enhance your Discord server's interactivity and fun. It responds to specific commands in chat, supports private messaging for specific features, and integrates with YouTube to announce streams.
@@ -24,6 +23,4 @@ lolbot is a Discord bot built with Python designed to enhance your Discord serve
 
 Contributions are welcome! Please open an issue or pull request if you'd like to contribute to the project.
 
-=======
-# lolbot
->>>>>>> e01169c530e85fda37cb98e91a3f1b7b3437f24a
+
