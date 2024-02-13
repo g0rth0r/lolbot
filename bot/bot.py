@@ -92,4 +92,22 @@ async def on_message(message):
         else:
             await message.channel.send("Please send me this command in a private message.")
 
+    elif message.content.startswith('!info') or not message.content.startswith(
+            ('!test', '!setstream', '!stream', '!prob')):
+        # List of commands and their descriptions
+        commands = {
+            '!test': 'Reply with "Test command received!"',
+            '!setstream [YouTube URL]': 'Set the stream URL (DM only). Announces the stream in the general channel.',
+            '!stream': 'Display the current stream URL if available.',
+            '!prob [number]': 'In DM, receive a placeholder for probability calculation. In public, announce the probability of lolnight happening.'
+        }
+        # Building the response string
+        response = "**Supported Commands:**\n"
+        for command, description in commands.items():
+            response += f"**{command}**: {description}\n"
+
+        await message.channel.send(response)
+
+    # No need to add additional else clauses for each command, as the catch-all handles them.
+
 client.run(TOKEN)
