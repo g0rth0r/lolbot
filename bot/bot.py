@@ -54,6 +54,8 @@ async def on_message(message):
 
     if message.author == client.user:
         return
+    # List of supported commands
+    supported_commands = ['!test', '!setstream', '!stream', '!prob', '!info']
 
     if message.content == '!test':
         await message.channel.send('Test command received!')
@@ -117,8 +119,7 @@ async def on_message(message):
             except ValueError:
                 await message.author.send('Please send a valid number.')
 
-    elif message.content.startswith('!info') or not message.content.startswith(
-            ('!test', '!setstream', '!stream', '!prob')):
+    elif message.content.startswith('!') and command not in supported_commands:
         # List of commands and their descriptions
         commands = {
             '!test': 'Reply with "Test command received!"',
