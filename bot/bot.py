@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import asyncio
 import re
+import statistics
 
 load_dotenv()  # Load environment variables from .env file
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -18,7 +19,21 @@ intents.members = True
 client = discord.Client(intents=intents)
 
 stream_info = {'url': None, 'timestamp': None}
+lolnight_prob = {}
 
+def get_lolnight_prob():
+    """Generates a message with the probability of a lolnight happening for the current day,
+    including individual probabilities and a total probability."""
+    current_day = datetime.utcnow().strftime('%Y-%m-%d')
+    if current_day in lolnight_prob and lolnight_prob[current_day]:
+        user_probs = lolnight_prob[current_day]
+        individual_messages = [f'{user}: {prob}%' for user, prob in user_probs.items()]
+        # Calculate total probability as the average of individual probabilities
+        total_prob = statistics.mean(user_probs.values())
+        return (f'The probability of "lolnight" happening today ({current_day}) is {total_prob}%.\n'
+                f'Individual probabilities:\n' + '\n'.join(individual_messages))
+    else:
+        return 'No probabilities set for today.'
 
 async def reset_stream_info():
     await asyncio.sleep(4 * 3600)  # Wait for 4 hours
@@ -35,6 +50,7 @@ async def on_ready():
 @client.event
 async def on_message(message):
     global stream_info
+    global lolnight_prob
 
     if message.author == client.user:
         return
@@ -71,26 +87,27 @@ async def on_message(message):
         else:
             await message.channel.send('There is no active stream at the moment.')
 
-    # Extended "prob" command functionality
-    if message.content.startswith('!prob'):
-        if isinstance(message.channel, discord.DMChannel):
-            # Extract the number from the message
+        # Handle the !prob command for setting probabilities in DMs
+    if message.content.startswith('!prob') and isinstance(message.channel, discord.DMChannel):
+        parts = message.content.split(' ')
+        if len(parts) == 2:
             try:
-                _, num_str = message.content.split(' ', 1)
-                num = int(num_str)  # Convert to integer
+                num = int(parts[1])
                 if 0 <= num <= 100:
-                    # Get current day in UTC
                     current_day = datetime.utcnow().strftime('%Y-%m-%d')
-                    print(f'Current Day: {current_day}, Value: {num}, Username: {message.author.name}')
-                    await message.author.send(f'Value received: {num}')
+                    if current_day not in lolnight_prob:
+                        lolnight_prob[current_day] = {}
+                    lolnight_prob[current_day][message.author.name] = num
+                    await message.author.send(f'Your probability for a lolnight happening today is set to {num}%.')
                 else:
                     await message.author.send('Please send a number between 0 and 100.')
             except ValueError:
                 await message.author.send('Please send a valid number.')
-            except Exception as e:
-                await message.author.send('Error processing your command. Make sure it is in the format `!prob number`.')
-        else:
-            await message.channel.send("Please send me this command in a private message.")
+
+        # Handle the standalone !prob command in public channels
+    elif message.content == '!prob' and not isinstance(message.channel, discord.DMChannel):
+        response = get_lolnight_prob()
+        await message.channel.send(response)
 
     elif message.content.startswith('!info') or not message.content.startswith(
             ('!test', '!setstream', '!stream', '!prob')):
