@@ -2,6 +2,7 @@
 import discord
 import asyncio
 from datetime import datetime
+import statistics
 
 class BotCommand:
     def __init__(self, name, description, execute_func):
@@ -15,6 +16,8 @@ class DiscordBot:
         self.token = token
         self.commands = {}
         self.stream_info = {'url': None, 'timestamp': None}
+        self.lolnight_prob = {}  # Add lolnight_prob attribute
+
 
         @self.client.event
         async def on_ready():
@@ -48,3 +51,15 @@ class DiscordBot:
         self.stream_info['url'] = None
         self.stream_info['timestamp'] = None
         print('Stream info has been reset.')
+
+    def get_lolnight_prob(self):
+        """Generates a message with the probability of a lolnight happening for the current day."""
+        current_day = datetime.utcnow().strftime('%Y-%m-%d')
+        if current_day in self.lolnight_prob and self.lolnight_prob[current_day]:
+            user_probs = self.lolnight_prob[current_day]
+            individual_messages = [f'{user}: {prob}%' for user, prob in user_probs.items()]
+            total_prob = statistics.mean(user_probs.values())
+            return (f'The probability of "lolnight" happening today ({current_day}) is {total_prob}%.\n'
+                    f'Individual probabilities:\n' + '\n'.join(individual_messages))
+        else:
+            return 'No probabilities set for today.'

@@ -25,6 +25,7 @@ async def reset_stream_info():
     stream_info['timestamp'] = None
     print('Stream info has been reset.')
 
+
 async def setstream_command(bot, message):
     if isinstance(message.channel, discord.DMChannel):
         _, url = message.content.split(' ', 1)
@@ -41,6 +42,7 @@ async def setstream_command(bot, message):
         else:
             await message.author.send("Invalid YouTube URL. Please make sure you're sending a valid YouTube stream URL.")
 
+
 async def stream_command(bot, message):
     stream_info = bot.stream_info
     if stream_info['url'] and stream_info['timestamp']:
@@ -51,3 +53,30 @@ async def stream_command(bot, message):
             await message.channel.send('There is no active stream at the moment.')
     else:
         await message.channel.send('There is no active stream at the moment.')
+
+
+async def prob_command(bot, message):
+    parts = message.content.split(' ')
+    command = parts[0]
+    additional_text = len(parts) > 1
+
+    if not additional_text:
+        # Show probabilities
+        response = bot.get_lolnight_prob()
+        await message.channel.send(response)
+    elif additional_text and isinstance(message.channel, discord.DMChannel):
+        try:
+            num = int(parts[1])
+            if 0 <= num <= 100:
+                current_day = datetime.utcnow().strftime('%Y-%m-%d')
+                if current_day not in bot.lolnight_prob:
+                    bot.lolnight_prob[current_day] = {}
+                bot.lolnight_prob[current_day][message.author.name] = num
+                await message.author.send(f'Your probability for a lolnight happening today is set to {num}%.')
+            else:
+                await message.author.send('Please send a number between 0 and 100.')
+        except ValueError:
+            await message.author.send('Please send a valid number.')
+    else:
+        # Inform about proper usage in public channels
+        await message.channel.send('To set your probability for a "lolnight" happening, please send `!prob [number]` in a direct message. Use `!prob` in this channel without additional text to view today\'s probabilities.')
