@@ -40,3 +40,14 @@ async def setstream_command(bot, message):
             bot.client.loop.create_task(bot.reset_stream_info())
         else:
             await message.author.send("Invalid YouTube URL. Please make sure you're sending a valid YouTube stream URL.")
+
+async def stream_command(bot, message):
+    stream_info = bot.stream_info
+    if stream_info['url'] and stream_info['timestamp']:
+        # Check if the stream URL is still valid (not older than 4 hours)
+        if datetime.utcnow() - stream_info['timestamp'] < timedelta(hours=4):
+            await message.channel.send(f'Current stream URL: {stream_info["url"]}')
+        else:
+            await message.channel.send('There is no active stream at the moment.')
+    else:
+        await message.channel.send('There is no active stream at the moment.')

@@ -1,6 +1,6 @@
 # bot.py
 from discord_bot import DiscordBot, BotCommand
-from commands import test_command, shrek_command, setstream_command
+from commands import test_command, shrek_command, setstream_command, stream_command
 import os
 from dotenv import load_dotenv
 
@@ -16,6 +16,7 @@ if __name__ == "__main__":
     discord_bot.add_command(BotCommand('!test', 'Reply with "Test command received!"', test_command))
     discord_bot.add_command(BotCommand('!shrek', 'Post a Shrek picture.', shrek_command))
     discord_bot.add_command(BotCommand('!setstream', 'Set the stream URL (DM only). Announces the stream in the general channel.', setstream_command))
+    discord_bot.add_command(BotCommand('!stream', 'Display the current stream URL if available.', stream_command))
 
 
     # Start the bot
