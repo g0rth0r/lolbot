@@ -55,7 +55,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     # List of supported commands
-    supported_commands = ['!test', '!setstream', '!stream', '!prob', '!info']
+    supported_commands = ['!test', '!setstream', '!stream', '!prob', '!info', '!shrek']
 
     if message.content == '!test':
         await message.channel.send('Test command received!')
@@ -118,6 +118,16 @@ async def on_message(message):
                     await message.author.send('Please send a number between 0 and 100.')
             except ValueError:
                 await message.author.send('Please send a valid number.')
+
+    elif command == '!shrek':
+        # Construct the path to the image
+        image_path = 'bot/static/shrek-rizz.png'
+        # Open the image file in binary mode
+        with open(image_path, 'rb') as image:
+            # Create a File object from the image
+            discord_file = discord.File(image, filename='shrek-rizz.png')
+            # Send the image in the channel where the command was used
+            await message.channel.send(file=discord_file)
 
     elif message.content.startswith('!') and command not in supported_commands:
         # List of commands and their descriptions
