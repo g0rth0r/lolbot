@@ -58,6 +58,11 @@ async def on_message(message):
     if message.content == '!test':
         await message.channel.send('Test command received!')
 
+    # Split command to check for additional parts
+    parts = message.content.split(' ')
+    command = parts[0]
+    additional_text = len(parts) > 1
+
     # Handle the !setstream command
     if message.content.startswith('!setstream'):
         if isinstance(message.channel, discord.DMChannel):
@@ -87,10 +92,18 @@ async def on_message(message):
         else:
             await message.channel.send('There is no active stream at the moment.')
 
-        # Handle the !prob command for setting probabilities in DMs
-    if message.content.startswith('!prob') and isinstance(message.channel, discord.DMChannel):
-        parts = message.content.split(' ')
-        if len(parts) == 2:
+    # Handle the !prob command
+    if command == '!prob':
+        # For DMs or standalone !prob command in public channels, show probabilities
+        if not additional_text:
+            response = get_lolnight_prob()
+            await message.channel.send(response)
+        # For !prob with additional text in public channels, inform about proper usage
+        elif additional_text and not isinstance(message.channel, discord.DMChannel):
+            await message.channel.send('To set your probability for a "lolnight" happening, please send `!prob [number]` in a direct message. Use `!prob` in this channel without additional text to view today\'s probabilities.')
+
+        # Setting probabilities in DMs
+        elif isinstance(message.channel, discord.DMChannel) and additional_text:
             try:
                 num = int(parts[1])
                 if 0 <= num <= 100:
@@ -103,11 +116,6 @@ async def on_message(message):
                     await message.author.send('Please send a number between 0 and 100.')
             except ValueError:
                 await message.author.send('Please send a valid number.')
-
-        # Handle the standalone !prob command in public channels
-    elif message.content == '!prob' and not isinstance(message.channel, discord.DMChannel):
-        response = get_lolnight_prob()
-        await message.channel.send(response)
 
     elif message.content.startswith('!info') or not message.content.startswith(
             ('!test', '!setstream', '!stream', '!prob')):
