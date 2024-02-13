@@ -1,5 +1,7 @@
 # discord_bot.py
 import discord
+import asyncio
+from datetime import datetime
 
 class BotCommand:
     def __init__(self, name, description, execute_func):
@@ -12,6 +14,7 @@ class DiscordBot:
         self.client = discord.Client(intents=discord.Intents.all())
         self.token = token
         self.commands = {}
+        self.stream_info = {'url': None, 'timestamp': None}
 
         @self.client.event
         async def on_ready():
@@ -39,3 +42,9 @@ class DiscordBot:
 
     def add_command(self, command):
         self.commands[command.name] = command
+
+    async def reset_stream_info(self):
+        await asyncio.sleep(4 * 3600)  # Wait for 4 hours
+        self.stream_info['url'] = None
+        self.stream_info['timestamp'] = None
+        print('Stream info has been reset.')
