@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  bot:
+    build: .
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - GENERAL_CHANNEL_ID=${GENERAL_CHANNEL_ID}
+    volumes:
+      - ./bot:/app/bot
+    env_file:
+      - .env
