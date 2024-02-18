@@ -54,3 +54,8 @@ def fetch_latest_stream_info():
     with get_db_cursor() as cursor:
         cursor.execute('SELECT url, timestamp FROM stream_info ORDER BY timestamp DESC LIMIT 1')
         return cursor.fetchone()
+
+def insert_stream_info(url, timestamp):
+    with get_db_cursor(commit=True) as cursor:
+        # Only insert new stream info without deleting existing entries
+        cursor.execute('INSERT INTO stream_info (url, timestamp) VALUES (?, ?)', (url, timestamp))

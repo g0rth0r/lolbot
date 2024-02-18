@@ -35,13 +35,8 @@ async def setstream_command(bot, message):
             # Validate the YouTube URL
             if re.match(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$', url):
                 timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-                # Insert stream info into the database
-                conn = sqlite3.connect('./database/bot.db')
-                c = conn.cursor()
-                # Insert new stream info
-                c.execute('INSERT INTO stream_info (url, timestamp) VALUES (?, ?)', (url, timestamp))
-                conn.commit()
-                conn.close()
+                # Insert stream info into the database using db utility
+                db.insert_stream_info(url, timestamp)
                 await message.author.send(f'Stream URL set: {url}')
                 # Print an announcement in the general chat
                 general_channel_id = int(os.getenv('GENERAL_CHANNEL_ID'))
@@ -55,7 +50,8 @@ async def setstream_command(bot, message):
         except Exception as e:
             print(f"Error setting stream URL: {e}")
             await message.author.send("Sorry, there was an error processing your request.")
-
+    else:
+        await message.channel.send("Use this command in a private message.")
 
 async def stream_command(bot, message):
     try:
