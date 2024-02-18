@@ -5,6 +5,7 @@ import re
 from datetime import datetime, timedelta
 import asyncio
 import os
+import sqlite3
 
 # Assuming stream_info is a global variable
 stream_info = {'url': None, 'timestamp': None}
@@ -28,20 +29,31 @@ async def reset_stream_info():
 
 async def setstream_command(bot, message):
     if isinstance(message.channel, discord.DMChannel):
-        _, url = message.content.split(' ', 1)
-        # Validate the YouTube URL
-        if re.match(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$', url):
-            bot.stream_info['url'] = url
-            bot.stream_info['timestamp'] = datetime.utcnow()
-            await message.author.send(f'Stream URL set: {url}')
-            # Print an announcement in the general chat
-            general_channel = bot.client.get_channel(int(os.getenv('GENERAL_CHANNEL_ID')))
-            await general_channel.send(f'@everyone A new stream has started! {url}')
-            # Reset the stream info after 4 hours using the bot's method
-            bot.client.loop.create_task(bot.reset_stream_info())
-        else:
-            await message.author.send("Invalid YouTube URL. Please make sure you're sending a valid YouTube stream URL.")
-
+        try:
+            _, url = message.content.split(' ', 1)
+            # Validate the YouTube URL
+            if re.match(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$', url):
+                timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+                # Insert stream info into the database
+                conn = sqlite3.connect('./database/bot.db')
+                c = conn.cursor()
+                # Insert new stream info
+                c.execute('INSERT INTO stream_info (url, timestamp) VALUES (?, ?)', (url, timestamp))
+                conn.commit()
+                conn.close()
+                await message.author.send(f'Stream URL set: {url}')
+                # Print an announcement in the general chat
+                general_channel_id = int(os.getenv('GENERAL_CHANNEL_ID'))
+                general_channel = bot.client.get_channel(general_channel_id)
+                if general_channel:  # Check if the channel was found
+                    await general_channel.send(f'@everyone A new stream has started! {url}')
+                else:
+                    print(f"Error: General channel with ID {general_channel_id} not found.")
+            else:
+                await message.author.send("Invalid YouTube URL. Please make sure you're sending a valid YouTube stream URL.")
+        except Exception as e:
+            print(f"Error setting stream URL: {e}")
+            await message.author.send("Sorry, there was an error processing your request.")
 
 async def stream_command(bot, message):
     stream_info = bot.stream_info
