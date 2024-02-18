@@ -2,7 +2,6 @@
 import discord
 import asyncio
 from datetime import datetime
-import statistics
 from ai_commands import handle_mention
 import sqlite3
 import db
@@ -63,15 +62,7 @@ class DiscordBot:
         self.stream_info['timestamp'] = None
         print('Stream info has been reset.')
 
-    def get_lolnight_prob(self):
+    def get_lolnight_prob(self, current_day):
         """Fetches and calculates the probability of a lolnight happening for the current day from the database."""
-        current_day = datetime.utcnow().strftime('%Y-%m-%d')
         probs = db.fetch_lolnight_probs(current_day)  # Assuming you have this function in db.py
-
-        if probs:
-            individual_messages = [f'{user}: {prob}%' for user, prob in probs]
-            total_prob = statistics.mean([prob for _, prob in probs])
-            return (f'The probability of "lolnight" happening today ({current_day}) is {total_prob}%.\n'
-                    f'Individual probabilities:\n' + '\n'.join(individual_messages))
-        else:
-            return 'No probabilities set for today.'
+        return probs
