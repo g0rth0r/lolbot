@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime
 import statistics
 from ai_commands import handle_mention
+import sqlite3
 
 class BotCommand:
     def __init__(self, name, description, execute_func):
@@ -62,12 +63,17 @@ class DiscordBot:
         print('Stream info has been reset.')
 
     def get_lolnight_prob(self):
-        """Generates a message with the probability of a lolnight happening for the current day."""
+        """Fetches and calculates the probability of a lolnight happening for the current day from the database."""
         current_day = datetime.utcnow().strftime('%Y-%m-%d')
-        if current_day in self.lolnight_prob and self.lolnight_prob[current_day]:
-            user_probs = self.lolnight_prob[current_day]
-            individual_messages = [f'{user}: {prob}%' for user, prob in user_probs.items()]
-            total_prob = statistics.mean(user_probs.values())
+        conn = sqlite3.connect('./database/bot.db')
+        c = conn.cursor()
+        c.execute('SELECT user_name, prob FROM lolnight_prob WHERE date = ?', (current_day,))
+        probs = c.fetchall()
+        conn.close()
+
+        if probs:
+            individual_messages = [f'{user}: {prob}%' for user, prob in probs]
+            total_prob = statistics.mean([prob for _, prob in probs])
             return (f'The probability of "lolnight" happening today ({current_day}) is {total_prob}%.\n'
                     f'Individual probabilities:\n' + '\n'.join(individual_messages))
         else:

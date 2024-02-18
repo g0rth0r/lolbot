@@ -82,7 +82,6 @@ async def stream_command(bot, message):
 
 async def prob_command(bot, message):
     parts = message.content.split(' ')
-    command = parts[0]
     additional_text = len(parts) > 1
 
     if not additional_text:
@@ -94,9 +93,14 @@ async def prob_command(bot, message):
             num = int(parts[1])
             if 0 <= num <= 100:
                 current_day = datetime.utcnow().strftime('%Y-%m-%d')
-                if current_day not in bot.lolnight_prob:
-                    bot.lolnight_prob[current_day] = {}
-                bot.lolnight_prob[current_day][message.author.name] = num
+                conn = sqlite3.connect('./database/bot.db')
+                c = conn.cursor()
+                # Update or insert the probability for the user for the current day
+                c.execute('''INSERT INTO lolnight_prob (user_name, prob, date) VALUES (?, ?, ?)
+                             ON CONFLICT(user_name, date) DO UPDATE SET prob=excluded.prob''',
+                          (message.author.name, num, current_day))
+                conn.commit()
+                conn.close()
                 await message.author.send(f'Your probability for a lolnight happening today is set to {num}%.')
             else:
                 await message.author.send('Please send a number between 0 and 100.')
