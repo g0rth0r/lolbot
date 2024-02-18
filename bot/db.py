@@ -1,7 +1,11 @@
-import sqlite3
+import sqlite3, os
 from contextlib import contextmanager
+from dotenv import load_dotenv
 
-DATABASE_PATH = './database/bot.db'
+# Load environment variables from .env file
+load_dotenv()
+
+DATABASE_PATH = os.getenv('DATABASE_PATH', 'database/bot.db')
 
 def init_db():
     with get_db_connection() as conn:

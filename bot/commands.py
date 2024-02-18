@@ -7,6 +7,8 @@ import asyncio
 import os
 import sqlite3
 import db
+import statistics
+from mqtt_util import publish_message, MQTT_TOPIC
 
 # Assuming stream_info is a global variable
 stream_info = {'url': None, 'timestamp': None}
@@ -78,7 +80,15 @@ async def prob_command(bot, message):
 
     if not additional_text:
         # Show probabilities
-        response = bot.get_lolnight_prob()
+        current_day = datetime.utcnow().strftime('%Y-%m-%d')
+        probs = bot.get_lolnight_prob(current_day)
+        if probs:
+            individual_messages = [f'{user}: {prob}%' for user, prob in probs]
+            total_prob = statistics.mean([prob for _, prob in probs])
+            response =  (f'The probability of "lolnight" happening today ({current_day}) is {total_prob}%.\n'
+                    f'Individual probabilities:\n' + '\n'.join(individual_messages))
+        else:
+            response = 'No probabilities set for today.'
         await message.channel.send(response)
     elif additional_text and isinstance(message.channel, discord.DMChannel):
         try:
@@ -86,6 +96,10 @@ async def prob_command(bot, message):
             if 0 <= num <= 100:
                 current_day = datetime.utcnow().strftime('%Y-%m-%d')
                 db.upsert_lolnight_prob(message.author.name, num, current_day)
+                probs = bot.get_lolnight_prob(current_day)
+                if probs:
+                    total_prob = statistics.mean([prob for _, prob in probs]) / 100
+                    publish_message(MQTT_TOPIC, str(total_prob))  # Publish the overall probability
                 await message.author.send(f'Your probability for a lolnight happening today is set to {num}%.')
             else:
                 await message.author.send('Please send a number between 0 and 100.')
