@@ -44,15 +44,13 @@ def upsert_lolnight_prob(user_name, prob, date):
                           ON CONFLICT(user_name, date) DO UPDATE SET prob = excluded.prob''',
                        (user_name, prob, date))
 
-# Example of a utility function to fetch the latest stream_info
-def fetch_latest_stream():
-    with get_db_cursor() as cursor:
-        cursor.execute('SELECT url, timestamp FROM stream_info ORDER BY timestamp DESC LIMIT 1')
-        return cursor.fetchone()
-
-
 # fetch the probability of lolnight happening
 def fetch_lolnight_probs(date):
     with get_db_cursor() as cursor:
         cursor.execute('SELECT user_name, prob FROM lolnight_prob WHERE date = ?', (date,))
         return cursor.fetchall()
+
+def fetch_latest_stream_info():
+    with get_db_cursor() as cursor:
+        cursor.execute('SELECT url, timestamp FROM stream_info ORDER BY timestamp DESC LIMIT 1')
+        return cursor.fetchone()

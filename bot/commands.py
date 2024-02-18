@@ -56,16 +56,11 @@ async def setstream_command(bot, message):
             print(f"Error setting stream URL: {e}")
             await message.author.send("Sorry, there was an error processing your request.")
 
+
 async def stream_command(bot, message):
     try:
-        # Connect to the SQLite database and select the most recent stream_info
-        conn = sqlite3.connect('./database/bot.db')
-        c = conn.cursor()
-        c.execute('SELECT url, timestamp FROM stream_info ORDER BY timestamp DESC LIMIT 1')
-        stream_info = c.fetchone()
-        conn.close()
+        stream_info = db.fetch_latest_stream_info()
 
-        # Check if there's a recent stream_info entry
         if stream_info:
             url, timestamp_str = stream_info
             timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
