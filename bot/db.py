@@ -1,6 +1,7 @@
 import sqlite3, os
 from contextlib import contextmanager
 from dotenv import load_dotenv
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -20,6 +21,15 @@ def init_db():
                         prob INTEGER NOT NULL,
                         date TEXT NOT NULL,
                         UNIQUE(user_name, date))''')
+        c.execute('''CREATE TABLE IF NOT EXISTS player_config (
+    discord_username TEXT PRIMARY KEY,
+    bf_username TEXT NOT NULL,
+    player_id INTEGER UNIQUE)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS player_stats (
+    player_id INTEGER,
+    stats JSON,  -- SQLite supports storing JSON as text, but you should serialize/deserialize when reading/writing.
+    fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(player_id) REFERENCES player_config(player_id))''')
         conn.commit()
 
 @contextmanager
@@ -63,3 +73,28 @@ def insert_stream_info(url, timestamp):
     with get_db_cursor(commit=True) as cursor:
         # Only insert new stream info without deleting existing entries
         cursor.execute('INSERT INTO stream_info (url, timestamp) VALUES (?, ?)', (url, timestamp))
+
+# Function to fetch a single player configuration by ID
+def fetch_player_config_by_id(player_id):
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT * FROM player_config WHERE player_id = ?", (player_id,))
+        return cursor.fetchone()
+
+# Function to fetch all player configurations
+def fetch_all_player_configs():
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT * FROM player_config")
+        return cursor.fetchall()
+
+# Function to save player stats
+def save_player_stats(player_id, stats):
+    with get_db_cursor(commit=True) as cursor:
+        # Assuming stats is a JSON-serializable dict
+        stats_json = json.dumps(stats)
+        cursor.execute("INSERT INTO player_stats (player_id, stats) VALUES (?, ?)", (player_id, stats_json))
+
+
+def fetch_player_config_by_discord_username(discord_username):
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT * FROM player_config WHERE discord_username = ?", (discord_username,))
+        return cursor.fetchone()

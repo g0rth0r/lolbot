@@ -9,6 +9,7 @@ import sqlite3
 import db
 import statistics
 from mqtt_util import publish_message, MQTT_TOPIC
+from format_stats import format_player_stats
 
 # Assuming stream_info is a global variable
 stream_info = {'url': None, 'timestamp': None}
@@ -108,3 +109,22 @@ async def prob_command(bot, message):
     else:
         # Inform about proper usage in public channels
         await message.channel.send('To set your probability for a "lolnight" happening, please send `!prob [number]` in a direct message. Use `!prob` in this channel without additional text to view today\'s probabilities.')
+
+
+async def fetchstats_command(bot, message):
+    discord_username = str(message.author)
+
+    # Fetch player configuration using Discord username
+    player_config = db.fetch_player_config_by_discord_username(discord_username)
+    if player_config:
+        _, bf_username, player_id = player_config
+        stats = bot.bf_api.get_player_stats(player_id=player_id)
+        if stats:
+            db.save_player_stats(player_id, stats)
+            # Here you can format the stats as you like before sending them back
+            parsed_stats = format_player_stats(stats)
+            await message.channel.send(parsed_stats)
+        else:
+            await message.channel.send("Failed to fetch player stats.")
+    else:
+        await message.channel.send("You are not configured. Please set up your player configuration first.")

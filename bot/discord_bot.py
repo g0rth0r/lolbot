@@ -5,6 +5,7 @@ from datetime import datetime
 from ai_commands import handle_mention
 import sqlite3
 import db
+from battlefield_api import BattlefieldAPI
 
 class BotCommand:
     def __init__(self, name, description, execute_func):
@@ -19,6 +20,7 @@ class DiscordBot:
         self.commands = {}
         self.stream_info = {'url': None, 'timestamp': None}
         self.lolnight_prob = {}  # Add lolnight_prob attribute
+        self.bf_api = BattlefieldAPI("https://api.gametools.network")
 
 
         @self.client.event
@@ -66,3 +68,17 @@ class DiscordBot:
         """Fetches and calculates the probability of a lolnight happening for the current day from the database."""
         probs = db.fetch_lolnight_probs(current_day)  # Assuming you have this function in db.py
         return probs
+    async def fetch_player_stats(self, player_id=None):
+        if player_id:
+            # Fetch stats for a single player by ID
+            player_config = db.fetch_player_config_by_id(player_id)
+            stats = self.bf_api.get_player_stats(player_id=player_id, platform=player_config['platform'])
+            if stats:
+                db.save_player_stats(player_id, stats)
+        else:
+            # Fetch and update stats for all configured players
+            all_players = db.fetch_all_player_configs()
+            for player in all_players:
+                stats = self.bf_api.get_player_stats(player_name=player['bf_username'], platform='pc')  # Assuming default platform
+                if stats:
+                    db.save_player_stats(player['player_id'], stats)
