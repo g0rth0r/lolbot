@@ -5,6 +5,7 @@ from datetime import datetime
 import statistics
 from ai_commands import handle_mention
 import sqlite3
+import db
 
 class BotCommand:
     def __init__(self, name, description, execute_func):
@@ -65,11 +66,7 @@ class DiscordBot:
     def get_lolnight_prob(self):
         """Fetches and calculates the probability of a lolnight happening for the current day from the database."""
         current_day = datetime.utcnow().strftime('%Y-%m-%d')
-        conn = sqlite3.connect('./database/bot.db')
-        c = conn.cursor()
-        c.execute('SELECT user_name, prob FROM lolnight_prob WHERE date = ?', (current_day,))
-        probs = c.fetchall()
-        conn.close()
+        probs = db.fetch_lolnight_probs(current_day)  # Assuming you have this function in db.py
 
         if probs:
             individual_messages = [f'{user}: {prob}%' for user, prob in probs]

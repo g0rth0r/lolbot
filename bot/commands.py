@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import asyncio
 import os
 import sqlite3
+import db
 
 # Assuming stream_info is a global variable
 stream_info = {'url': None, 'timestamp': None}
@@ -93,14 +94,7 @@ async def prob_command(bot, message):
             num = int(parts[1])
             if 0 <= num <= 100:
                 current_day = datetime.utcnow().strftime('%Y-%m-%d')
-                conn = sqlite3.connect('./database/bot.db')
-                c = conn.cursor()
-                # Update or insert the probability for the user for the current day
-                c.execute('''INSERT INTO lolnight_prob (user_name, prob, date) VALUES (?, ?, ?)
-                             ON CONFLICT(user_name, date) DO UPDATE SET prob=excluded.prob''',
-                          (message.author.name, num, current_day))
-                conn.commit()
-                conn.close()
+                db.upsert_lolnight_prob(message.author.name, num, current_day)
                 await message.author.send(f'Your probability for a lolnight happening today is set to {num}%.')
             else:
                 await message.author.send('Please send a number between 0 and 100.')

@@ -3,13 +3,14 @@ from discord_bot import DiscordBot, BotCommand
 from commands import test_command, shrek_command, setstream_command, stream_command, prob_command
 import os
 from dotenv import load_dotenv
+from db import init_db
 
 load_dotenv()  # Load environment variables from .env file
 TOKEN = os.getenv('DISCORD_TOKEN')
 GENERAL_CHANNEL_ID=os.getenv('GENERAL_CHANNEL_ID')
 
 if __name__ == "__main__":
-    TOKEN = os.getenv('DISCORD_TOKEN')
+    init_db()
     discord_bot = DiscordBot(TOKEN)
 
     # Register commands
