@@ -56,15 +56,28 @@ async def setstream_command(bot, message):
             await message.author.send("Sorry, there was an error processing your request.")
 
 async def stream_command(bot, message):
-    stream_info = bot.stream_info
-    if stream_info['url'] and stream_info['timestamp']:
-        # Check if the stream URL is still valid (not older than 4 hours)
-        if datetime.utcnow() - stream_info['timestamp'] < timedelta(hours=4):
-            await message.channel.send(f'Current stream URL: {stream_info["url"]}')
+    try:
+        # Connect to the SQLite database and select the most recent stream_info
+        conn = sqlite3.connect('./database/bot.db')
+        c = conn.cursor()
+        c.execute('SELECT url, timestamp FROM stream_info ORDER BY timestamp DESC LIMIT 1')
+        stream_info = c.fetchone()
+        conn.close()
+
+        # Check if there's a recent stream_info entry
+        if stream_info:
+            url, timestamp_str = stream_info
+            timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S')
+            # Check if the stream URL is still valid (not older than 4 hours)
+            if datetime.utcnow() - timestamp < timedelta(hours=4):
+                await message.channel.send(f'Current stream URL: {url}')
+            else:
+                await message.channel.send('There is no active stream at the moment.')
         else:
             await message.channel.send('There is no active stream at the moment.')
-    else:
-        await message.channel.send('There is no active stream at the moment.')
+    except Exception as e:
+        print(f"Error fetching stream information: {e}")
+        await message.channel.send("Sorry, there was an error processing your request.")
 
 
 async def prob_command(bot, message):
