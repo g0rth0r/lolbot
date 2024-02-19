@@ -181,12 +181,52 @@ def format_notable_achievements(data, previous_data=None):
 def format_section_header(title):
     return f"\n**{title}**:\n"
 
-def format_weapons_section(data):
+def calculate_rank_changes(current_top_weapons, previous_top_weapons):
+    """
+    Calculate the changes in rank for the top weapons.
+    :param current_top_weapons: List of the current top 5 weapons, sorted.
+    :param previous_top_weapons: List of the previous top 5 weapons, sorted.
+    :return: A dictionary with weapon names as keys and rank change as values.
+    """
+    rank_changes = {}
+    previous_ranks = {weapon['weaponName']: i for i, weapon in enumerate(previous_top_weapons)}
+
+    for i, weapon in enumerate(current_top_weapons):
+        weapon_name = weapon['weaponName']
+        previous_rank = previous_ranks.get(weapon_name)
+        if previous_rank is None:
+            rank_changes[weapon_name] = "New"
+        else:
+            change = previous_rank - i
+            rank_changes[weapon_name] = change
+
+    return rank_changes
+
+
+def format_weapons_section(data, previous_data=None):
     output = ""
     top_weapons = sorted(data["weapons"], key=lambda x: x['kills'], reverse=True)[:5]
+    previous_top_weapons = sorted(previous_data["weapons"], key=lambda x: x['kills'], reverse=True)[
+                           :5] if previous_data else []
+
+    rank_changes = calculate_rank_changes(top_weapons, previous_top_weapons)
+
     for weapon in top_weapons:
-        output += f"🔹 {weapon['weaponName']}: {weapon['kills']} kills, {weapon['damagePerMinute']} damage per minute\n"
+        weapon_name = weapon['weaponName']
+        rank_change = rank_changes.get(weapon_name)
+        change_annotation = ""
+        if isinstance(rank_change, int):
+            if rank_change > 0:
+                change_annotation = f" (🔽{abs(rank_change)} spots)"
+            elif rank_change < 0:
+                change_annotation = f" (🔼{abs(rank_change)} spots)"
+        elif rank_change == "New":
+            change_annotation = " (🆕 New Entry)"
+
+        output += f"🔹 {weapon_name}: {weapon['kills']} kills, {weapon['damagePerMinute']} damage per minute{change_annotation}\n"
+
     return output
+
 
 def format_vehicles_section(data):
     output = ""
@@ -240,7 +280,7 @@ def format_player_stats_v2(data, previous_data=None):
     output += format_section_header("🥇 Notable Achievements")
     output += format_notable_achievements(data, previous_data)
     output += format_section_header("🔫 Top 5 Weapons")
-    output += format_weapons_section(data)
+    output += format_weapons_section(data, previous_data)
     output += format_section_header("🚁 Top 5 Vehicles")
     output += format_vehicles_section(data)
     output += format_section_header("🎯 Accuracy & Efficiency")
