@@ -119,15 +119,22 @@ async def fetchstats_command(bot, message):
     if player_config:
         _, bf_username, player_id = player_config
         stats = bot.bf_api.get_player_stats(player_id=player_id)
+        previous_stats = db.get_most_recent_player_stats(player_id=player_id)
         if stats:
             db.save_player_stats(player_id, stats)
-            # Here you can format the stats as you like before sending them back
-            parsed_stats = format_player_stats(stats)
+
+            if previous_stats:
+                parsed_stats = format_player_stats(stats, previous_data=previous_stats)
+            else:
+                # If there are no previous stats, just format the current stats
+                parsed_stats = format_player_stats(stats)
+
             await message.channel.send(parsed_stats)
         else:
             await message.channel.send("Failed to fetch player stats.")
     else:
         await message.channel.send("You are not configured. Please set up your player configuration first.")
+
 
 async def ask_command(bot, message):
     # Extract the question from the content

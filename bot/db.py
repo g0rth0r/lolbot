@@ -98,3 +98,22 @@ def fetch_player_config_by_discord_username(discord_username):
     with get_db_cursor() as cursor:
         cursor.execute("SELECT * FROM player_config WHERE discord_username = ?", (discord_username,))
         return cursor.fetchone()
+
+
+def get_most_recent_player_stats(player_id):
+    """Fetches the most recent stats for a given player ID."""
+    with sqlite3.connect('database/bot.db') as conn:
+        conn.row_factory = sqlite3.Row  # This allows us to access columns by name
+        cursor = conn.cursor()
+
+        cursor.execute('''SELECT stats FROM player_stats 
+                          WHERE player_id = ? 
+                          ORDER BY fetched_at DESC 
+                          LIMIT 1''', (player_id,))
+
+        row = cursor.fetchone()
+        if row:
+            # Assuming stats are stored as a serialized JSON string
+            return json.loads(row['stats'])
+        else:
+            return None

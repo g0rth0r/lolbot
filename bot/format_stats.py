@@ -1,6 +1,6 @@
 import json
 
-def format_player_stats(data):
+def format_player_stats(data, previous_data=None):
     # Extracting necessary data
     username = data["userName"]
     total_kills = data["kills"]
