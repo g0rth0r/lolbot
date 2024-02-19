@@ -10,7 +10,7 @@ import db
 import statistics
 from mqtt_util import publish_message, MQTT_TOPIC
 from format_stats import format_player_stats
-
+import ai_commands
 # Assuming stream_info is a global variable
 stream_info = {'url': None, 'timestamp': None}
 
@@ -124,6 +124,31 @@ async def fetchstats_command(bot, message):
             # Here you can format the stats as you like before sending them back
             parsed_stats = format_player_stats(stats)
             await message.channel.send(parsed_stats)
+        else:
+            await message.channel.send("Failed to fetch player stats.")
+    else:
+        await message.channel.send("You are not configured. Please set up your player configuration first.")
+
+async def ask_command(bot, message):
+    # Extract the question from the content
+    _, question = message.content.split(' ', 1)
+
+    # Check to ensure a question was actually provided
+    if not question.strip():
+        await message.channel.send("Please provide a question about player statistics.")
+        return
+
+    discord_username = str(message.author)
+
+    # Fetch player configuration using Discord username
+    player_config = db.fetch_player_config_by_discord_username(discord_username)
+    if player_config:
+        _, bf_username, player_id = player_config
+        stats = bot.bf_api.get_player_stats(player_id=player_id)
+        if stats:
+            async with message.channel.typing():
+                await ai_commands.prompt_stats(stats, question, message)  # Ensure prompt_stats is correctly implemented
+
         else:
             await message.channel.send("Failed to fetch player stats.")
     else:

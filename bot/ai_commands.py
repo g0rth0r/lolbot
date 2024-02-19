@@ -8,7 +8,7 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 async def handle_mention(bot, message, mention_text):
     sender = message.author
     completion = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4-turbo-preview",
         messages=[
             {"role": "system",
              "content": "You are lolbot, a Discord chatbot for the Lolnight channel, which is basically a place for "
@@ -17,6 +17,20 @@ async def handle_mention(bot, message, mention_text):
                         "game we play is Battlefield 2042, so you should have knowledge in that. The tone is usually "
                         "friendly, wacky, jokes, meme, crude, drinking beer, whisky and other stuff...Always only reply with the message itself. Do not use bracket when @ somebody."},
             {"role": "user", "content": f"Message from {sender}: {mention_text}"}
+        ]
+    )
+    await message.channel.send(completion.choices[0].message.content)
+
+async def prompt_stats(stats, question, message):
+    # Placeholder function. Replace this with actual logic to query the ChatGPT API
+    completion = client.chat.completions.create(
+        model="gpt-4-0125-preview",
+        messages=[
+            {"role": "system",
+             "content": f"""You are lolbot, a Discord chatbot for the Lolnight channel. In this context you are being 
+asked a question about the players' in-game statistics in json format. answer the user's questions as accurately as
+ possible, but keep the answer short and concise while having a playful and chill tone. Here is the data: {stats}"""},
+            {"role": "user", "content": f"{question}"}
         ]
     )
     await message.channel.send(completion.choices[0].message.content)
