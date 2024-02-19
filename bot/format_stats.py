@@ -143,14 +143,39 @@ def format_top_vehicle(data, previous_data=None):
 
     return f"🔹 Top Vehicle: {top_vehicle['vehicleName']} with {top_vehicle['kills']} kills{vehicle_change_str}\n"
 
-def format_notable_achievements(data):
+
+def format_notable_achievements(data, previous_data=None):
     achievements = ""
+
+    # Current notable achievements
     longest_equipped_weapon = max(data["weapons"], key=lambda x: x["timeEquipped"])
-    highest_accuracy_weapon = max([weapon for weapon in data['weapons'] if weapon['type'] not in ['Melee', 'Shotguns']], key=lambda x: x["accuracy"])
+    highest_accuracy_weapon = max([weapon for weapon in data['weapons'] if weapon['type'] not in ['Melee', 'Shotguns']],
+                                  key=lambda x: x["accuracy"])
     top_distance_vehicle = max(data["vehicles"], key=lambda x: x["distanceTraveled"])
-    achievements += f"  🔸 Longest Equipped: {longest_equipped_weapon['weaponName']} for a total of {longest_equipped_weapon['timeEquipped']} seconds\n"
-    achievements += f"  🔸 Highest Accuracy: {highest_accuracy_weapon['weaponName']} at {highest_accuracy_weapon['accuracy']}%\n"
-    achievements += f"  🔸 Top Vehicle for Distance Traveled: {top_distance_vehicle['vehicleName']}, covering {top_distance_vehicle['distanceTraveled']} meters\n\n"
+
+    # Previous notable achievements for comparison
+    if previous_data:
+        previous_longest_equipped_weapon = max(previous_data["weapons"], key=lambda x: x["timeEquipped"])
+        previous_highest_accuracy_weapon = max(
+            [weapon for weapon in previous_data['weapons'] if weapon['type'] not in ['Melee', 'Shotguns']],
+            key=lambda x: x["accuracy"])
+        previous_top_distance_vehicle = max(previous_data["vehicles"], key=lambda x: x["distanceTraveled"])
+    else:
+        previous_longest_equipped_weapon = previous_highest_accuracy_weapon = previous_top_distance_vehicle = None
+
+    # Calculate and format changes
+    longest_equipped_change = format_stat_change(longest_equipped_weapon['timeEquipped'],
+                                                 previous_longest_equipped_weapon,
+                                                 "timeEquipped") if previous_longest_equipped_weapon else ""
+    highest_accuracy_change = format_stat_change(highest_accuracy_weapon['accuracy'], previous_highest_accuracy_weapon,
+                                                 "accuracy") if previous_highest_accuracy_weapon else ""
+    top_distance_change = format_stat_change(top_distance_vehicle['distanceTraveled'], previous_top_distance_vehicle,
+                                             "distanceTraveled") if previous_top_distance_vehicle else ""
+
+    achievements += f"  🔸 Longest Equipped: {longest_equipped_weapon['weaponName']} for a total of {longest_equipped_weapon['timeEquipped']} seconds{longest_equipped_change}\n"
+    achievements += f"  🔸 Highest Accuracy: {highest_accuracy_weapon['weaponName']} at {highest_accuracy_weapon['accuracy']}%{highest_accuracy_change}\n"
+    achievements += f"  🔸 Top Vehicle for Distance Traveled: {top_distance_vehicle['vehicleName']}, covering {top_distance_vehicle['distanceTraveled']} meters{top_distance_change}\n\n"
+
     return achievements
 
 def format_section_header(title):
@@ -213,7 +238,7 @@ def format_player_stats_v2(data, previous_data=None):
     output += format_top_weapon(data, previous_data)
     output += format_top_vehicle(data, previous_data)
     output += format_section_header("🥇 Notable Achievements")
-    output += format_notable_achievements(data)
+    output += format_notable_achievements(data, previous_data)
     output += format_section_header("🔫 Top 5 Weapons")
     output += format_weapons_section(data)
     output += format_section_header("🚁 Top 5 Vehicles")
