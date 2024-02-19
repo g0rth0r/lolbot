@@ -65,20 +65,74 @@ def format_player_stats(data, previous_data=None):
 
     return output
 
-def format_general_info(data):
+def format_stat_change(current, previous, key):
+    if previous and key in previous:
+        change = current - previous[key]
+        if change > 0:
+            return f" [+{change} 🔼]"
+        elif change < 0:
+            return f"  [{change} 🔽]"
+    return ""
+
+def format_general_info(data, previous_data=None):
     username = data["userName"]
     level = data["level"]
     total_kills = data["kills"]
     kpm = data["killsPerMinute"]
-    return f"🔹 Username: {username} (lvl {level})\n🔹 Total Kills: {total_kills} ({kpm} KPM)\n"
 
-def format_top_weapon(data):
+    # Calculate differences if previous_data is provided
+    level_change = format_stat_change(level, previous_data, "level") if previous_data else ""
+    kills_change = format_stat_change(total_kills, previous_data, "kills") if previous_data else ""
+    kpm_change = format_stat_change(kpm, previous_data, "killsPerMinute") if previous_data else ""
+
+    output = f""
+    output += f"🔹 Username: {username} (lvl {level}{level_change})\n"
+    output += f"🔹 Total Kills: {total_kills}{kills_change}\n"
+    output += f"🔹 Kills Per Minute: {kpm}{kpm_change} KPM\n"
+    return output
+
+
+def find_previous_top_weapon(previous_data):
+    if previous_data and "weapons" in previous_data:
+        return max(previous_data["weapons"], key=lambda x: x["kills"])
+    return None
+
+
+def find_previous_top_item(previous_data, item_type):
+    """
+    Finds the top item (weapon or vehicle) from the previous data set based on kills.
+
+    :param previous_data: The previous stats data.
+    :param item_type: A string indicating the type of items to search ('weapons' or 'vehicles').
+    :return: The top item based on kills from the previous data set, or None if not applicable.
+    """
+    if previous_data and item_type in previous_data:
+        return max(previous_data[item_type], key=lambda x: x["kills"], default=None)
+    return None
+
+def format_top_weapon(data, previous_data=None):
     top_weapon_type = max(data["weapons"], key=lambda x: x["kills"])
-    return f"🔹 Top Weapon Type: {top_weapon_type['weaponName']} with {top_weapon_type['kills']} kills\n"
+    previous_top_weapon = find_previous_top_item(previous_data, "weapons")
 
-def format_top_vehicle(data):
+    # Only compare kills if the top weapon remains the same
+    kills_change = ""
+    if previous_top_weapon and top_weapon_type['weaponName'] == previous_top_weapon['weaponName']:
+        kills_change = format_stat_change(top_weapon_type['kills'], previous_top_weapon, "kills")
+
+    return f"🔹 Top Weapon Type: {top_weapon_type['weaponName']} with {top_weapon_type['kills']} kills{kills_change}\n"
+
+
+def format_top_vehicle(data, previous_data=None):
     top_vehicle = max(data["vehicles"], key=lambda x: x["kills"])
-    return f"🔹 Top Vehicle: {top_vehicle['vehicleName']} with {top_vehicle['kills']} kills\n"
+    previous_top_vehicle = find_previous_top_item(previous_data, "vehicles")
+
+    # Only compare kills if the top vehicle remains the same
+    kills_change = ""
+    if previous_top_vehicle and top_vehicle['vehicleName'] == previous_top_vehicle['vehicleName']:
+        kills_change = format_stat_change(top_vehicle['kills'], previous_top_vehicle, "kills")
+
+    return f"🔹 Top Vehicle: {top_vehicle['vehicleName']} with {top_vehicle['kills']} kills{kills_change}\n"
+
 
 def format_notable_achievements(data):
     achievements = ""
@@ -146,9 +200,9 @@ def format_player_stats_v2(data, previous_data=None):
     output = ""
 
     output += format_section_header("🔥 Player Highlights")
-    output += format_general_info(data)
-    output += format_top_weapon(data)
-    output += format_top_vehicle(data)
+    output += format_general_info(data, previous_data)
+    output += format_top_weapon(data, previous_data)
+    output += format_top_vehicle(data, previous_data)
     output += format_section_header("🥇 Notable Achievements")
     output += format_notable_achievements(data)
     output += format_section_header("🔫 Top 5 Weapons")

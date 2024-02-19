@@ -121,7 +121,7 @@ async def fetchstats_command(bot, message):
         stats = bot.bf_api.get_player_stats(player_id=player_id)
         previous_stats = db.get_most_recent_player_stats(player_id=player_id)
         if stats:
-            db.save_player_stats(player_id, stats)
+            #db.save_player_stats(player_id, stats) # TODO Turn this back on; it's only for testing
 
             if previous_stats:
                 parsed_stats = format_player_stats_v2(stats, previous_data=previous_stats)
