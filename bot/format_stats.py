@@ -114,25 +114,34 @@ def format_top_weapon(data, previous_data=None):
     top_weapon_type = max(data["weapons"], key=lambda x: x["kills"])
     previous_top_weapon = find_previous_top_item(previous_data, "weapons")
 
-    # Only compare kills if the top weapon remains the same
-    kills_change = ""
-    if previous_top_weapon and top_weapon_type['weaponName'] == previous_top_weapon['weaponName']:
-        kills_change = format_stat_change(top_weapon_type['kills'], previous_top_weapon, "kills")
+    weapon_change_str = ""
+    if previous_top_weapon:
+        if top_weapon_type['weaponName'] == previous_top_weapon['weaponName']:
+            # If the top weapon is the same, show kills change
+            kills_change = format_stat_change(top_weapon_type['kills'], previous_top_weapon, "kills")
+            weapon_change_str = f" {kills_change}" if kills_change else ""
+        else:
+            # If the top weapon has changed, indicate the new and previous top weapon
+            weapon_change_str = f" (🔄 {previous_top_weapon['weaponName']}, ⤴️{top_weapon_type['weaponName']})"
 
-    return f"🔹 Top Weapon Type: {top_weapon_type['weaponName']} with {top_weapon_type['kills']} kills{kills_change}\n"
+    return f"🔹 Top Weapon Type: {top_weapon_type['weaponName']} with {top_weapon_type['kills']} kills{weapon_change_str}\n"
 
 
 def format_top_vehicle(data, previous_data=None):
     top_vehicle = max(data["vehicles"], key=lambda x: x["kills"])
     previous_top_vehicle = find_previous_top_item(previous_data, "vehicles")
 
-    # Only compare kills if the top vehicle remains the same
-    kills_change = ""
-    if previous_top_vehicle and top_vehicle['vehicleName'] == previous_top_vehicle['vehicleName']:
-        kills_change = format_stat_change(top_vehicle['kills'], previous_top_vehicle, "kills")
+    vehicle_change_str = ""
+    if previous_top_vehicle:
+        if top_vehicle['vehicleName'] == previous_top_vehicle['vehicleName']:
+            # If the top vehicle is the same, show kills change
+            kills_change = format_stat_change(top_vehicle['kills'], previous_top_vehicle, "kills")
+            vehicle_change_str = f" {kills_change}" if kills_change else ""
+        else:
+            # If the top vehicle has changed, indicate the new and previous top vehicle
+            vehicle_change_str = f" (🔄 {previous_top_vehicle['vehicleName']}, ⤴️ {top_vehicle['vehicleName']})"
 
-    return f"🔹 Top Vehicle: {top_vehicle['vehicleName']} with {top_vehicle['kills']} kills{kills_change}\n"
-
+    return f"🔹 Top Vehicle: {top_vehicle['vehicleName']} with {top_vehicle['kills']} kills{vehicle_change_str}\n"
 
 def format_notable_achievements(data):
     achievements = ""
