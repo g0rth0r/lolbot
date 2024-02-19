@@ -9,7 +9,7 @@ import sqlite3
 import db
 import statistics
 from mqtt_util import publish_message, MQTT_TOPIC
-from format_stats import format_player_stats
+from format_stats import *
 import ai_commands
 # Assuming stream_info is a global variable
 stream_info = {'url': None, 'timestamp': None}
@@ -124,10 +124,10 @@ async def fetchstats_command(bot, message):
             db.save_player_stats(player_id, stats)
 
             if previous_stats:
-                parsed_stats = format_player_stats(stats, previous_data=previous_stats)
+                parsed_stats = format_player_stats_v2(stats, previous_data=previous_stats)
             else:
                 # If there are no previous stats, just format the current stats
-                parsed_stats = format_player_stats(stats)
+                parsed_stats = format_player_stats_v2(stats)
 
             await message.channel.send(parsed_stats)
         else:
