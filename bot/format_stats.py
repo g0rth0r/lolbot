@@ -181,24 +181,26 @@ def format_notable_achievements(data, previous_data=None):
 def format_section_header(title):
     return f"\n**{title}**:\n"
 
-def calculate_rank_changes(current_top_weapons, previous_top_weapons):
+def calculate_rank_changes(current_top_items, previous_top_items, item_key):
     """
-    Calculate the changes in rank for the top weapons.
-    :param current_top_weapons: List of the current top 5 weapons, sorted.
-    :param previous_top_weapons: List of the previous top 5 weapons, sorted.
-    :return: A dictionary with weapon names as keys and rank change as values.
+    Calculate the changes in rank for the top items (weapons, vehicles, etc.).
+    :param current_top_items: List of the current top items, sorted.
+    :param previous_top_items: List of the previous top items, sorted.
+    :param item_key: The key in the item dictionary to use for identification (e.g., 'weaponName' or 'vehicleName').
+    :return: A dictionary with item names as keys and rank change as values.
     """
     rank_changes = {}
-    previous_ranks = {weapon['weaponName']: i for i, weapon in enumerate(previous_top_weapons)}
+    # Use the provided item_key to identify items
+    previous_ranks = {item[item_key]: i for i, item in enumerate(previous_top_items)}
 
-    for i, weapon in enumerate(current_top_weapons):
-        weapon_name = weapon['weaponName']
-        previous_rank = previous_ranks.get(weapon_name)
+    for i, item in enumerate(current_top_items):
+        item_name = item[item_key]
+        previous_rank = previous_ranks.get(item_name)
         if previous_rank is None:
-            rank_changes[weapon_name] = "New"
+            rank_changes[item_name] = "New"
         else:
             change = previous_rank - i
-            rank_changes[weapon_name] = change
+            rank_changes[item_name] = change
 
     return rank_changes
 
@@ -209,7 +211,7 @@ def format_weapons_section(data, previous_data=None):
     previous_top_weapons = sorted(previous_data["weapons"], key=lambda x: x['kills'], reverse=True)[
                            :5] if previous_data else []
 
-    rank_changes = calculate_rank_changes(top_weapons, previous_top_weapons)
+    rank_changes = calculate_rank_changes(top_weapons, previous_top_weapons, 'weaponName')
 
     for weapon in top_weapons:
         weapon_name = weapon['weaponName']
@@ -217,9 +219,9 @@ def format_weapons_section(data, previous_data=None):
         change_annotation = ""
         if isinstance(rank_change, int):
             if rank_change > 0:
-                change_annotation = f" (🔽{abs(rank_change)} spots)"
-            elif rank_change < 0:
                 change_annotation = f" (🔼{abs(rank_change)} spots)"
+            elif rank_change < 0:
+                change_annotation = f" (🔽{abs(rank_change)} spots)"
         elif rank_change == "New":
             change_annotation = " (🆕 New Entry)"
 
@@ -228,11 +230,28 @@ def format_weapons_section(data, previous_data=None):
     return output
 
 
-def format_vehicles_section(data):
-    output = ""
+def format_vehicles_section(data, previous_data=None):
+    output = "🚁 **Top 5 Vehicles:**\n"
     top_vehicles = sorted(data["vehicles"], key=lambda x: x['kills'], reverse=True)[:5]
+    previous_top_vehicles = sorted(previous_data["vehicles"], key=lambda x: x['kills'], reverse=True)[
+                            :5] if previous_data else []
+
+    rank_changes = calculate_rank_changes(top_vehicles, previous_top_vehicles, 'vehicleName')
+
     for vehicle in top_vehicles:
-        output += f"🔹 {vehicle['vehicleName']}: {vehicle['kills']} kills, {vehicle['killsPerMinute']} kills per minute\n"
+        vehicle_name = vehicle['vehicleName']
+        rank_change = rank_changes.get(vehicle_name)
+        change_annotation = ""
+        if isinstance(rank_change, int):
+            if rank_change > 0:
+                change_annotation = f" (🔼{abs(rank_change)} spots)"
+            elif rank_change < 0:
+                change_annotation = f" (🔽{abs(rank_change)} spots)"
+        elif rank_change == "New":
+            change_annotation = " (🆕 New Entry)"
+
+        output += f"🔹 {vehicle_name}: {vehicle['kills']} kills, {vehicle['killsPerMinute']} kills per minute{change_annotation}\n"
+
     return output
 
 def format_accuracy_efficiency(data):
@@ -282,7 +301,7 @@ def format_player_stats_v2(data, previous_data=None):
     output += format_section_header("🔫 Top 5 Weapons")
     output += format_weapons_section(data, previous_data)
     output += format_section_header("🚁 Top 5 Vehicles")
-    output += format_vehicles_section(data)
+    output += format_vehicles_section(data, previous_data)
     output += format_section_header("🎯 Accuracy & Efficiency")
     output += format_accuracy_efficiency(data)
     output += format_section_header("💥 Explosive Impact")
