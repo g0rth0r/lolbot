@@ -19,7 +19,7 @@ if __name__ == "__main__":
     discord_bot.add_command(BotCommand('!setstream', 'Set the stream URL (DM only). Announces the stream in the general channel.', setstream_command))
     discord_bot.add_command(BotCommand('!stream', 'Display the current stream URL if available.', stream_command))
     discord_bot.add_command(BotCommand('!prob', 'Set or view the probability of a lolnight happening.', prob_command))
-    discord_bot.add_command(BotCommand('!fetchstats', 'Retrieve and refreshes BF2042 stats.', fetchstats_command))
+    discord_bot.add_command(BotCommand('!stats', 'Retrieve and refreshes BF2042 stats.', fetchstats_command))
     discord_bot.add_command(BotCommand('!askGPT', 'Ask GPT about your BF2042 stats (~0.50€ per).', ask_command))
     # Start the bot
     discord_bot.run()

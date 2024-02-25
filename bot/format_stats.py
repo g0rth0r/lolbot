@@ -231,7 +231,7 @@ def format_weapons_section(data, previous_data=None):
 
 
 def format_vehicles_section(data, previous_data=None):
-    output = "🚁 **Top 5 Vehicles:**\n"
+    output = ""
     top_vehicles = sorted(data["vehicles"], key=lambda x: x['kills'], reverse=True)[:5]
     previous_top_vehicles = sorted(previous_data["vehicles"], key=lambda x: x['kills'], reverse=True)[
                             :5] if previous_data else []
